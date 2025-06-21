@@ -2,13 +2,10 @@ import { NextResponse } from "next/server";
 import Note from "@/lib/models/Note";
 import { connectToDB } from "@/lib/db";
 
-interface RouteContext {
-  params: {
-    id: string;
-  };
-}
-
-export async function PUT(request: Request, { params }: RouteContext) {
+export async function PUT(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     await connectToDB();
     const { id } = params;
@@ -48,7 +45,10 @@ export async function PUT(request: Request, { params }: RouteContext) {
   }
 }
 
-export async function DELETE(request: Request, { params }: RouteContext) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     await connectToDB();
     const { id } = params;
