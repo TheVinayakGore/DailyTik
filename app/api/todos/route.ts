@@ -71,12 +71,12 @@ export async function POST(req: Request) {
       },
     });
 
-    // Limit to 2 todos per date
-    if (existingTodosCount >= 2) {
+    // Limit to 1 todo per date
+    if (existingTodosCount >= 1) {
       return NextResponse.json(
         {
-          error: "Maximum 2 todos allowed per date",
-          message: "You can only create up to 2 todos for the same date",
+          error: "Maximum 1 todo allowed per date",
+          message: "You can only create up to 1 todo for the same date",
         },
         { status: 400 }
       );

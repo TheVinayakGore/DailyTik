@@ -35,50 +35,33 @@ type TodoFormProps = {
   onCancelEdit?: () => void;
 };
 
-export default function TodoForm({ onAddTodo }: TodoFormProps) {
+export default function TodoForm({
+  onAddTodo,
+  editingTodo,
+  onUpdateTodo,
+  onCancelEdit,
+}: TodoFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [title, setTitle] = useState("");
+  const [desc, setDesc] = useState("");
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [hasTodoForDate, setHasTodoForDate] = useState(false);
 
-  // Check if selected date already has a todo
-  const checkTodoForDate = async (selectedDate: Date) => {
-    try {
-      const startOfDay = new Date(selectedDate);
-      startOfDay.setHours(0, 0, 0, 0);
+  const isEditMode = !!editingTodo;
 
-      const endOfDay = new Date(selectedDate);
-      endOfDay.setHours(23, 59, 59, 999);
-
-      const response = await fetch(
-        `/api/todos?startDate=${startOfDay.toISOString()}&endDate=${endOfDay.toISOString()}`
-      );
-      if (response.ok) {
-        const todos = await response.json();
-        setHasTodoForDate(todos.length > 0);
-      }
-    } catch (error) {
-      console.error("Error checking todos for date:", error);
-    }
-  };
-
-  // Update todo check when date changes
   useEffect(() => {
-    if (date) {
-      checkTodoForDate(date);
+    if (isEditMode) {
+      setTitle(editingTodo.title);
+      setDesc(editingTodo.desc || "");
+      setDate(new Date(editingTodo.date));
     }
-  }, [date]);
-
-  // Check if selected date is in the past
-  const isPastDate = (selectedDate: Date) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return selectedDate < today;
-  };
+  }, [editingTodo, isEditMode]);
 
   const handleDateSelect = (selectedDate: Date | undefined) => {
-    if (selectedDate && isPastDate(selectedDate)) {
-      toast.error("Cannot add todos for past dates");
+    if (
+      selectedDate &&
+      new Date(selectedDate) < new Date(new Date().setHours(0, 0, 0, 0))
+    ) {
+      toast.error("Cannot select a past date.");
       return;
     }
     setDate(selectedDate);
@@ -86,53 +69,52 @@ export default function TodoForm({ onAddTodo }: TodoFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!title.trim()) {
+      toast.error("Title is required.");
+      return;
+    }
     setIsSubmitting(true);
-    const form = e.target as HTMLFormElement;
-    const formData = new FormData(form);
+
+    const todoData = {
+      title,
+      desc,
+      date: date?.toISOString(),
+    };
 
     try {
-      const response = await fetch("/api/todos", {
-        method: "POST",
+      const url = isEditMode ? `/api/todos/${editingTodo._id}` : "/api/todos";
+      const method = isEditMode ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: formData.get("title"),
-          desc: formData.get("desc"),
-          date: date ? date.toISOString() : undefined,
-        }),
+        body: JSON.stringify(todoData),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        // Handle specific error for todo limit
-        if (
-          response.status === 400 &&
-          data.error === "Maximum 1 todo allowed per date"
-        ) {
-          toast.error(data.message || "Maximum 1 todo allowed per date");
-        } else if (
-          response.status === 400 &&
-          data.error === "Cannot create todos for past dates"
-        ) {
-          toast.error(data.message || "Cannot create todos for past dates");
-        } else {
-          throw new Error(data.error || "Failed to add todo");
-        }
-        return;
+        throw new Error(
+          data.error || `Failed to ${isEditMode ? "update" : "add"} todo`
+        );
       }
 
-      onAddTodo(data);
-      form.reset();
+      if (isEditMode && onUpdateTodo) {
+        onUpdateTodo(data);
+        toast.success("Todo updated successfully!");
+      } else {
+        onAddTodo(data);
+        toast.success("Todo added successfully!");
+      }
+
       setTitle("");
+      setDesc("");
       setDate(new Date());
-      toast.success("Todo added successfully!");
-
-      // Refresh todo check for the date
-      if (date) {
-        checkTodoForDate(date);
-      }
-    } catch {
-      toast.error("Failed to add todo");
+      if (onCancelEdit) onCancelEdit();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "An unknown error occurred."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -145,8 +127,14 @@ export default function TodoForm({ onAddTodo }: TodoFormProps) {
     >
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl font-semibold">Add New Todo</CardTitle>
-          <CardDescription>Create a new task for your day</CardDescription>
+          <CardTitle className="text-2xl font-semibold">
+            {isEditMode ? "Edit Todo" : "Add New Todo"}
+          </CardTitle>
+          <CardDescription>
+            {isEditMode
+              ? "Update your existing task."
+              : "Create a new task for your day."}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <Input
@@ -161,6 +149,8 @@ export default function TodoForm({ onAddTodo }: TodoFormProps) {
             name="desc"
             placeholder="Add a note (optional)"
             className="text-sm p-5"
+            value={desc}
+            onChange={(e) => setDesc(e.target.value)}
           />
           <Popover>
             <PopoverTrigger asChild>
@@ -177,32 +167,39 @@ export default function TodoForm({ onAddTodo }: TodoFormProps) {
                 mode="single"
                 selected={date}
                 onSelect={handleDateSelect}
-                disabled={(date) => isPastDate(date)}
+                disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
                 initialFocus
               />
             </PopoverContent>
           </Popover>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex gap-2">
           <Button
             type="submit"
-            disabled={
-              isSubmitting ||
-              !title.trim() ||
-              hasTodoForDate ||
-              (date ? isPastDate(date) : false)
-            }
-            className="mt-2 md:p-6 text-sm md:text-base w-full"
+            disabled={isSubmitting || !title.trim()}
+            className={`mt-2 md:p-6 text-sm md:text-base ${isEditMode ? "w-1/2" : "w-full"}`}
           >
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Adding...
+                {isEditMode ? "Updating..." : "Adding..."}
               </>
+            ) : isEditMode ? (
+              "Update Todo"
             ) : (
               "Add Todo"
             )}
           </Button>
+          {isEditMode && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancelEdit}
+              className="mt-2 md:p-6 text-sm md:text-base w-1/2"
+            >
+              Cancel
+            </Button>
+          )}
         </CardFooter>
       </Card>
     </form>
