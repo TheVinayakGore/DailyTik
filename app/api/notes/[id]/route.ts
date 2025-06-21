@@ -1,14 +1,20 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import Note from "@/lib/models/Note";
 import { connectToDB } from "@/lib/db";
 
+interface Params {
+  params: {
+    id: string;
+  };
+}
+
 export async function PUT(
-  request: NextRequest,
-  { params }: { params: { _id: string } }
-) {
+  request: Request,
+  { params }: Params
+): Promise<NextResponse> {
   try {
     await connectToDB();
-    const { _id } = params;
+    const { id } = params;
     const { title, content, tags, category } = await request.json();
 
     const update: Partial<{
@@ -23,7 +29,7 @@ export async function PUT(
     if (tags !== undefined) update.tags = tags;
     if (category !== undefined) update.category = category;
 
-    const note = await Note.findByIdAndUpdate(_id, update, { new: true });
+    const note = await Note.findByIdAndUpdate(id, update, { new: true });
 
     if (!note) {
       return NextResponse.json({ error: "Note not found" }, { status: 404 });
@@ -46,9 +52,9 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+  request: Request,
+  { params }: Params
+): Promise<NextResponse> {
   try {
     await connectToDB();
     const { id } = params;
