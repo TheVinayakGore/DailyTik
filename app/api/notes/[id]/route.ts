@@ -4,11 +4,11 @@ import { connectToDB } from "@/lib/db";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { _id: string } }
 ) {
   try {
     await connectToDB();
-    const { id } = params;
+    const { _id } = params;
     const { title, content, tags, category } = await request.json();
 
     const update: Partial<{
@@ -23,7 +23,7 @@ export async function PUT(
     if (tags !== undefined) update.tags = tags;
     if (category !== undefined) update.category = category;
 
-    const note = await Note.findByIdAndUpdate(id, update, { new: true });
+    const note = await Note.findByIdAndUpdate(_id, update, { new: true });
 
     if (!note) {
       return NextResponse.json({ error: "Note not found" }, { status: 404 });
