@@ -3,23 +3,25 @@ import Note from "@/lib/models/Note";
 import { connectToDB } from "@/lib/db";
 
 export async function PUT(
-  req: Request,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
     await connectToDB();
     const { id } = params;
-    const { title, content, tags } = await req.json();
+    const { title, content, tags, category } = await request.json();
 
     const update: Partial<{
       title: string;
       content: string;
       tags: string[];
+      category: string;
     }> = {};
 
     if (title !== undefined) update.title = title;
     if (content !== undefined) update.content = content;
     if (tags !== undefined) update.tags = tags;
+    if (category !== undefined) update.category = category;
 
     const note = await Note.findByIdAndUpdate(id, update, { new: true });
 
@@ -44,7 +46,7 @@ export async function PUT(
 }
 
 export async function DELETE(
-  req: Request,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
