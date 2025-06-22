@@ -17,7 +17,13 @@ const geistMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_URL || "http://localhost:3000"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_URL
+      ? process.env.NEXT_PUBLIC_URL.startsWith("http")
+        ? process.env.NEXT_PUBLIC_URL
+        : "https://dailytik.vercel.app"
+      : "http://localhost:3000"
+  ),
   title: "DailyTik - Your Daily Productivity Tracker",
   description:
     "DailyTik helps you organize your day with todos, notes, and more. Boost your productivity with a simple, beautiful, and powerful daily tracker.",
@@ -91,9 +97,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${inter.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${inter.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
