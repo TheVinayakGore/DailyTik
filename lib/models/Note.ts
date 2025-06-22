@@ -10,6 +10,7 @@ const NoteSchema = new Schema(
       enum: ["WORK", "PERSONAL", "STUDY", "IDEAS", "PROJECTS", "OTHER"],
     },
     tags: { type: [String], default: [] },
+    date: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );

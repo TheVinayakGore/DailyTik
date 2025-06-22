@@ -14,6 +14,14 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "react-toastify";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 
 const categories = ["WORK", "PERSONAL", "STUDY", "IDEAS", "PROJECTS", "OTHER"];
 
@@ -21,6 +29,7 @@ export default function NewNote() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [date, setDate] = useState<Date | undefined>(new Date());
   const [category, setCategory] = useState(categories[0]);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
@@ -50,7 +59,7 @@ export default function NewNote() {
       const res = await fetch("/api/notes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content, category, tags }),
+        body: JSON.stringify({ title, content, category, tags, date }),
       });
 
       if (res.ok) {
@@ -72,11 +81,11 @@ export default function NewNote() {
   };
 
   return (
-    <main className="w-full h-full p-5 md:p-20 mt-10">
+    <main className="w-full h-full p-5 md:p-20 mt-16 md:mt-10">
       <div className="max-w-4xl mx-auto">
         <Card className="shadow-lg py-0">
-          <CardHeader className="border-b bg-muted/50 pt-5">
-            <CardTitle className="text-3xl font-bold text-center">
+          <CardHeader className="border-b bg-muted/50 py-3 md:pt-5">
+            <CardTitle className="text-2xl sm:text-3xl font-bold text-center">
               Create New Note
             </CardTitle>
           </CardHeader>
@@ -100,29 +109,60 @@ export default function NewNote() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <label
-                  htmlFor="category"
-                  className="text-sm font-medium text-muted-foreground"
-                >
-                  Category
-                </label>
-                <Select
-                  value={category}
-                  onValueChange={setCategory}
-                  disabled={isSubmitting}
-                >
-                  <SelectTrigger className="h-12 dark:bg-zinc-800">
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label
+                    htmlFor="category"
+                    className="text-sm font-medium text-muted-foreground"
+                  >
+                    Category
+                  </label>
+                  <Select
+                    value={category}
+                    onValueChange={setCategory}
+                    disabled={isSubmitting}
+                  >
+                    <SelectTrigger className="h-12 dark:bg-zinc-800">
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label
+                    htmlFor="date"
+                    className="text-sm font-medium text-muted-foreground"
+                  >
+                    Date
+                  </label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className="w-full h-12 justify-start text-left font-normal"
+                        disabled={isSubmitting}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {date ? format(date, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -177,7 +217,7 @@ export default function NewNote() {
                 />
               </div>
 
-              <div className="flex justify-end gap-4 pt-4 border-t">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t w-full">
                 <Button
                   type="button"
                   variant="outline"

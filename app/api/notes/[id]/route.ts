@@ -10,18 +10,20 @@ export async function PUT(
     await connectToDB();
 
     const { id } = await params;
-    const { title, content, tags, category } = await req.json();
+    const { title, content, tags, category, date } = await req.json();
     const update: Partial<{
       title: string;
       content: string;
       tags: string[];
       category: string;
+      date: Date;
     }> = {};
 
     if (title !== undefined) update.title = title;
     if (content !== undefined) update.content = content;
     if (tags !== undefined) update.tags = tags;
     if (category !== undefined) update.category = category;
+    if (date !== undefined) update.date = date;
 
     const note = await Note.findByIdAndUpdate(id, update, { new: true });
 

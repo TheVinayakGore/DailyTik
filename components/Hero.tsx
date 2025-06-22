@@ -33,6 +33,7 @@ type Todo = {
   desc?: string;
   date: string;
   completed: boolean;
+  subTodos?: { title: string }[];
 };
 
 export default function Hero() {
@@ -191,8 +192,8 @@ export default function Hero() {
             <ul className="space-y-5">
               {todos.slice(0, 5).map((todo) => (
                 <Card key={todo._id}>
-                  <li className="bg-card flex flex-col gap-1">
-                    <CardHeader className="flex flex-col sm:flex-row justify-between items-start gap-3">
+                  <li className="flex flex-col">
+                    <CardHeader className="flex flex-col sm:flex-row justify-between items-start gap-3 pb-0">
                       <div className="flex items-center gap-3">
                         <Checkbox
                           checked={todo.completed}
@@ -231,7 +232,7 @@ export default function Hero() {
                         </Button>
                       </div>
                     </CardHeader>
-                    <CardContent className="md:ml-10">
+                    <CardContent className="md:ml-10 pb-2">
                       <div className="flex items-center gap-1 md:gap-2 text-sm md:text-base">
                         <span className="font-bold">Date :</span>
                         <CalendarIcon className="h-3 md:h-4 w-3 md:w-4" />
@@ -254,6 +255,18 @@ export default function Hero() {
                               : todo.desc}
                           </p>
                         </>
+                      )}
+                      {todo.subTodos && todo.subTodos.length > 0 && (
+                        <div className="mt-2">
+                          <h4 className="font-bold">Sub-Tasks:</h4>
+                          <ul className="list-decimal list-inside ml-4">
+                            {todo.subTodos.map((sub, index) => (
+                              <li key={index} className="text-xs">
+                                {sub.title}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       )}
                     </CardContent>
                     <CardFooter className="flex flex-col md:flex-row items-start gap-3 md:ml-10 w-full">

@@ -20,10 +20,26 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Pencil, Trash2, CalendarIcon } from "lucide-react";
 import { Note } from "@/types/note";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const categories = ["WORK", "PERSONAL", "STUDY", "IDEAS", "PROJECTS", "OTHER"];
 
 export default function NoteCard({
   note,
@@ -37,6 +53,10 @@ export default function NoteCard({
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(note.title);
   const [editContent, setEditContent] = useState(note.content);
+  const [editCategory, setEditCategory] = useState(note.category);
+  const [editDate, setEditDate] = useState<Date | undefined>(
+    note.date ? new Date(note.date) : new Date()
+  );
   const [editTags, setEditTags] = useState<string[]>(note.tags);
   const [tagInput, setTagInput] = useState("");
 
@@ -65,7 +85,8 @@ export default function NoteCard({
           title: editTitle,
           content: editContent,
           tags: editTags,
-          category: note.category,
+          category: editCategory,
+          date: editDate,
         }),
       });
 
@@ -99,7 +120,7 @@ export default function NoteCard({
 
   return (
     <Card className="flex flex-col gap-3 h-full hover:shadow-lg transition-shadow duration-300 ease-in-out">
-      <CardHeader>
+      <CardHeader className="pb-0">
         <CardTitle className="line-clamp-2">Title : {note.title}</CardTitle>
         {note.content && (
           <CardDescription className="line-clamp-2">
@@ -108,10 +129,14 @@ export default function NoteCard({
         )}
       </CardHeader>
 
-      <CardContent className="flex-grow">
+      <CardContent className="flex-grow py-0">
         <div className="flex items-center text-xs text-muted-foreground pt-2">
           <CalendarIcon className="w-4 h-4 mr-2" />
-          <span>{format(parseISO(note.updatedAt), "PPP")}</span>
+          <span>
+            {note.date
+              ? format(parseISO(note.date), "PPP")
+              : "No date provided"}
+          </span>
         </div>
       </CardContent>
 
@@ -137,48 +162,95 @@ export default function NoteCard({
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Edit Note</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <Input
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  placeholder="Title"
-                />
-                <Textarea
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  placeholder="Content"
-                  rows={5}
-                />
-                <div className="space-y-2">
-                  <label htmlFor="edit-tags" className="text-sm font-medium">
-                    Tags
-                  </label>
-                  <div className="flex flex-wrap items-center gap-2 rounded-md border border-input p-2">
-                    {editTags.map((tag) => (
-                      <Badge key={tag} variant="secondary">
-                        {tag}
-                        <button
-                          type="button"
-                          className="ml-2 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                          onClick={() => removeTag(tag)}
-                        >
-                          <span className="sr-only">Remove {tag}</span>
-                          &#x2715;
-                        </button>
-                      </Badge>
-                    ))}
+                <DialogDescription asChild>
+                  <div className="space-y-4 py-4">
                     <Input
-                      id="edit-tags"
-                      placeholder="Add tags and press Enter..."
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      onKeyDown={handleTagsKeyDown}
-                      className="flex-1 border-0 h-9 shadow-none focus-visible:ring-0"
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      placeholder="Title"
                     />
+                    <Textarea
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      placeholder="Content"
+                      rows={5}
+                    />
+                    <Select
+                      value={editCategory}
+                      onValueChange={setEditCategory}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className="w-full justify-start text-left font-normal"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {editDate ? (
+                            format(editDate, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={editDate}
+                          onSelect={setEditDate}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="edit-tags"
+                        className="text-sm font-medium"
+                      >
+                        Tags
+                      </label>
+                      <div className="flex flex-wrap items-center gap-2 rounded-md border border-input p-2">
+                        {editTags.map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className="p-1.5 rounded"
+                          >
+                            {tag}
+                            <button
+                              type="button"
+                              className="ml-2 outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                              onClick={() => removeTag(tag)}
+                            >
+                              <span className="sr-only">Remove {tag}</span>
+                              &#x2715;
+                            </button>
+                          </Badge>
+                        ))}
+                        <Input
+                          id="edit-tags"
+                          placeholder="Add tags and press Enter..."
+                          value={tagInput}
+                          onChange={(e) => setTagInput(e.target.value)}
+                          onKeyDown={handleTagsKeyDown}
+                          className="flex-1 border-0 h-9 shadow-none focus-visible:ring-0"
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </DialogDescription>
+              </DialogHeader>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setIsEditing(false)}>
                   Cancel

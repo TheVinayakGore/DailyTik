@@ -7,12 +7,18 @@ import { toast } from 'react-toastify';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 
+type SubTodo = {
+  title: string;
+};
+
 type Todo = {
   _id: string;
   title: string;
   desc?: string;
   date: string;
   completed: boolean;
+  createdAt: string;
+  subTodos?: SubTodo[];
 };
 
 type TodoListProps = {

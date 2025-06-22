@@ -3,24 +3,27 @@ import Todo from "@/lib/models/Todo";
 import { connectToDB } from "@/lib/db";
 
 export async function PUT(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  request: Request,
+  { params }: { params: { id: string } }
 ) {
   try {
-    // Connect to database first
     await connectToDB();
+    const { id } = params;
+    const { title, desc, date, completed, subTodos } = await request.json();
 
-    const { id } = await params;
-    const { title, desc, completed } = await req.json();
     const update: Partial<{
       title: string;
       desc: string;
+      date: Date;
       completed: boolean;
+      subTodos: Array<{ title: string }>;
     }> = {};
 
     if (title !== undefined) update.title = title;
     if (desc !== undefined) update.desc = desc;
+    if (date !== undefined) update.date = new Date(date);
     if (completed !== undefined) update.completed = completed;
+    if (subTodos !== undefined) update.subTodos = subTodos;
 
     const todo = await Todo.findByIdAndUpdate(id, update, { new: true });
 
@@ -30,20 +33,11 @@ export async function PUT(
 
     return NextResponse.json(todo);
   } catch (error) {
-    console.error("Detailed error:", {
-      error,
-      timestamp: new Date().toISOString(),
-    });
+    console.error("Detailed error:", error);
     return NextResponse.json(
       {
         error: "Failed to update todo",
         message: error instanceof Error ? error.message : "Unknown error",
-        stack:
-          process.env.NODE_ENV === "development"
-            ? error instanceof Error
-              ? error.stack
-              : undefined
-            : undefined,
       },
       { status: 500 }
     );
@@ -51,14 +45,12 @@ export async function PUT(
 }
 
 export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  request: Request,
+  { params }: { params: { id: string } }
 ) {
   try {
-    // Connect to database first
     await connectToDB();
-
-    const { id } = await params;
+    const { id } = params;
     const deletedTodo = await Todo.findByIdAndDelete(id);
 
     if (!deletedTodo) {

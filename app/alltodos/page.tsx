@@ -3,6 +3,10 @@ import React, { useState, useEffect, useRef } from "react";
 import WeekCard from "@/components/WeekCard";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
+type SubTodo = {
+  title: string;
+};
+
 type Todo = {
   _id: string;
   title: string;
@@ -10,21 +14,12 @@ type Todo = {
   date: string;
   completed: boolean;
   createdAt: string;
+  subTodos?: SubTodo[];
 };
 
 const months = [
-  "JAN",
-  "FEB",
-  "MAR",
-  "APR",
-  "MAY",
-  "JUN",
-  "JUL",
-  "AUG",
-  "SEP",
-  "OCT",
-  "NOV",
-  "DEC",
+  "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+  "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
 ];
 
 function getWeeksInMonth(year: number, month: string) {
@@ -34,15 +29,11 @@ function getWeeksInMonth(year: number, month: string) {
 
   const weeks = [];
   const start = new Date(firstDay);
-
-  // Adjust to start on Sunday
   start.setDate(start.getDate() - start.getDay());
 
   while (start <= lastDay) {
     const end = new Date(start);
     end.setDate(start.getDate() + 6);
-
-    // Ensure end date doesn't go beyond month end
     if (end > lastDay) end.setDate(lastDay.getDate());
 
     weeks.push({
@@ -58,7 +49,6 @@ function getWeeksInMonth(year: number, month: string) {
 }
 
 function isDateInWeek(date: Date, weekStart: Date, weekEnd: Date) {
-  // Normalize dates by setting time to midnight to avoid timezone issues
   const checkDate = new Date(date);
   checkDate.setHours(0, 0, 0, 0);
 
@@ -90,10 +80,10 @@ export default function AllTodos() {
   });
   const [initialized, setInitialized] = useState(false);
   const currentYear = new Date().getFullYear();
+  
+  // Updated ref types to use HTMLElement instead of HTMLDivElement
   const monthRefs = useRef<Record<string, HTMLElement | null>>({});
-  const weekRefs = useRef<
-    Record<string, React.RefObject<HTMLDivElement | null>[]>
-  >({});
+  const weekRefs = useRef<Record<string, React.RefObject<HTMLElement>[]>>({});
 
   useEffect(() => {
     const fetchTodos = async () => {
@@ -147,17 +137,22 @@ export default function AllTodos() {
 
   // Initialize week refs for current month
   if (!weekRefs.current[currentMonth]) {
-    weekRefs.current[currentMonth] = weeks.map(() => React.createRef());
+    weekRefs.current[currentMonth] = weeks.map(() => 
+      React.createRef<HTMLElement>()
+    );
   }
 
   const activeWeekIdx = activeWeek[currentMonth] ?? 0;
 
   const handleWeekClick = (idx: number) => {
     setActiveWeek((prev) => ({ ...prev, [currentMonth]: idx }));
-    weekRefs.current[currentMonth][idx]?.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
+    const ref = weekRefs.current[currentMonth]?.[idx]?.current;
+    if (ref) {
+      ref.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
   };
 
   // Filter todos for current month
@@ -215,7 +210,7 @@ export default function AllTodos() {
       <section
         id={currentMonth}
         ref={(el) => {
-          monthRefs.current[currentMonth] = el;
+          if (el) monthRefs.current[currentMonth] = el;
         }}
         className="flex flex-col md:flex-row relative items-start justify-start overflow-auto w-full"
       >
@@ -239,9 +234,9 @@ export default function AllTodos() {
         </aside>
 
         {/* Week card */}
-        <div className="relative left-0 pt-24 md:pt-28 w-full">
+        <div className="relative left-0 pt-24 md:pt-28 w-full min-h-screen">
           {activeWeekData && (
-            <div ref={weekRefs.current[currentMonth]?.[activeWeekIdx]}>
+            <div ref={weekRefs.current[currentMonth]?.[activeWeekIdx] as React.RefObject<HTMLDivElement>}>
               <WeekCard
                 weekNumber={activeWeekIdx + 1}
                 startDate={activeWeekData.startDate}

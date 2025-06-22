@@ -46,14 +46,14 @@ export default function MonthCard({
 
   return (
     <main
-      className={`p-4 mb-6 w-full transition-opacity ${
+      className={`p-4 mb-6 w-full transition-opacity  ${
         isExpired ? "opacity-50 pointer-events-none grayscale" : ""
       }`}
     >
       <h2 className="text-xl font-bold mb-4">
         {month} {year}
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full ">
         {weeks.map((week, index) => {
           const weekTodos = monthTodos.filter((todo) => {
             const todoDate = new Date(todo.date);

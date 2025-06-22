@@ -70,9 +70,9 @@ export default function AllNotes() {
     <main className="w-full h-full">
       {/* Header and controls */}
       <div className="fixed top-14 pt-5 px-4 md:px-6 bg-background backdrop-blur-lg w-full z-20 border-b">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-3">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 pb-3">
           {/* Category navigation */}
-          <nav className="flex items-center gap-2 md:gap-4 overflow-x-auto">
+          <nav className="flex items-center gap-2 md:gap-4 py-3 overflow-x-auto w-full">
             {categories.map((category) => (
               <Button
                 key={category}
@@ -107,7 +107,7 @@ export default function AllNotes() {
       </div>
 
       {/* Notes content */}
-      <div className="pt-52 sm:pt-40 md:pt-28 pb-10 px-4 md:px-6">
+      <div className="pt-56 sm:pt-44 md:pt-32 pb-10 px-4 md:px-6">
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <LoadingSpinner />

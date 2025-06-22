@@ -50,7 +50,7 @@ export async function GET(request: Request) {
 export async function POST(req: Request) {
   try {
     await connectToDB();
-    const { title, content, category, tags } = await req.json();
+    const { title, content, category, tags, date } = await req.json();
 
     // Validate required fields
     if (!title || !title.trim()) {
@@ -76,6 +76,7 @@ export async function POST(req: Request) {
       content: content.trim(),
       category: category,
       tags: tags || [],
+      date: date ? new Date(date) : new Date(),
     });
 
     return NextResponse.json(note, { status: 201 });

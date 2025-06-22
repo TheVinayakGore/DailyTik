@@ -13,7 +13,6 @@ export async function GET(request: Request) {
 
     let query = {};
 
-    // If date range is provided, filter by date
     if (startDate && endDate) {
       query = {
         date: {
@@ -38,46 +37,43 @@ export async function GET(request: Request) {
 export async function POST(req: Request) {
   try {
     await connectToDB();
-    const { title, desc, date } = await req.json();
+    const { title, desc, date, subTodos } = await req.json();
 
-    // Set the date for the new todo
+    if (!title) {
+      return NextResponse.json(
+        { error: "Title is required" },
+        { status: 400 }
+      );
+    }
+
     const todoDate = date ? new Date(date) : new Date();
-
-    // Check if the date is in the past
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     if (todoDate < today) {
       return NextResponse.json(
-        {
-          error: "Cannot create todos for past dates",
-          message: "You can only create todos for today or future dates",
-        },
+        { error: "Cannot create todos for past dates" },
         { status: 400 }
       );
     }
 
-    // Check how many todos already exist for this date
+    // Check for existing todos on the same date
     const startOfDay = new Date(todoDate);
     startOfDay.setHours(0, 0, 0, 0);
 
     const endOfDay = new Date(todoDate);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const existingTodosCount = await Todo.countDocuments({
+    const existingTodoCount = await Todo.countDocuments({
       date: {
         $gte: startOfDay,
         $lte: endOfDay,
       },
     });
 
-    // Limit to 1 todo per date
-    if (existingTodosCount >= 1) {
+    if (existingTodoCount >= 1) {
       return NextResponse.json(
-        {
-          error: "Maximum 1 todo allowed per date",
-          message: "You can only create up to 1 todo for the same date",
-        },
+        { error: "Only one todo allowed per date" },
         { status: 400 }
       );
     }
@@ -86,7 +82,9 @@ export async function POST(req: Request) {
       title,
       desc,
       date: todoDate,
+      subTodos: subTodos || [],
     });
+    
     return NextResponse.json(todo);
   } catch (error) {
     console.error("POST todo error:", error);
