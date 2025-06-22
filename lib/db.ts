@@ -27,9 +27,24 @@ export async function connectToDB() {
   }
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI!);
+    const opts = {
+      bufferCommands: false,
+    };
+
+    try {
+      cached.promise = mongoose.connect(MONGODB_URI!, opts);
+    } catch (error) {
+      console.error("MongoDB connection error:", error);
+      throw error;
+    }
   }
 
-  cached.conn = await cached.promise;
-  return cached.conn;
+  try {
+    cached.conn = await cached.promise;
+    return cached.conn;
+  } catch (error) {
+    cached.promise = null;
+    console.error("Failed to connect to MongoDB:", error);
+    throw error;
+  }
 }

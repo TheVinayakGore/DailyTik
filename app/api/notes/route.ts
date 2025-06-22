@@ -40,7 +40,10 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("GET notes error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch notes" },
+      {
+        error: "Failed to fetch notes",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
@@ -83,7 +86,10 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("POST note error:", error);
     return NextResponse.json(
-      { error: "Failed to create note" },
+      {
+        error: "Failed to create note",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

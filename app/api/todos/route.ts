@@ -27,7 +27,10 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("GET todos error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch todos" },
+      {
+        error: "Failed to fetch todos",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
@@ -40,10 +43,7 @@ export async function POST(req: Request) {
     const { title, desc, date, subTodos } = await req.json();
 
     if (!title) {
-      return NextResponse.json(
-        { error: "Title is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Title is required" }, { status: 400 });
     }
 
     const todoDate = date ? new Date(date) : new Date();
@@ -84,12 +84,15 @@ export async function POST(req: Request) {
       date: todoDate,
       subTodos: subTodos || [],
     });
-    
+
     return NextResponse.json(todo);
   } catch (error) {
     console.error("POST todo error:", error);
     return NextResponse.json(
-      { error: "Failed to create todo" },
+      {
+        error: "Failed to create todo",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

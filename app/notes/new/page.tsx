@@ -223,11 +223,12 @@ export default function NewNote() {
                   variant="outline"
                   onClick={() => router.back()}
                   className="px-8"
+                  size="lg"
                   disabled={isSubmitting}
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting} className="px-8">
+                <Button type="submit" size="lg" disabled={isSubmitting} className="px-8">
                   {isSubmitting ? "Creating..." : "Create Note"}
                 </Button>
               </div>
