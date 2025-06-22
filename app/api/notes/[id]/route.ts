@@ -1,16 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import Note from "@/lib/models/Note";
 import { connectToDB } from "@/lib/db";
 
 export async function PUT(
-  request: NextRequest,
-  context: { params: { id: string } }
-): Promise<NextResponse> {
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     await connectToDB();
-    const { id } = context.params;
-    const { title, content, tags, category } = await request.json();
 
+    const { id } = await params;
+    const { title, content, tags, category } = await req.json();
     const update: Partial<{
       title: string;
       content: string;
@@ -46,12 +46,13 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: NextRequest,
-  context: { params: { id: string } }
-): Promise<NextResponse> {
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     await connectToDB();
-    const { id } = context.params;
+
+    const { id } = await params;
     const deletedNote = await Note.findByIdAndDelete(id);
 
     if (!deletedNote) {
